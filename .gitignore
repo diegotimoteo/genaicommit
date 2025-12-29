@@ -13,3 +13,5 @@ src/*.json
 test.ts
 notes.md
 .nvmrc
+.agent/
+openspec/
