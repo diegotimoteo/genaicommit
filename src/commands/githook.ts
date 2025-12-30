@@ -1,5 +1,5 @@
 import { intro, outro } from '@clack/prompts';
-import { fileURLToPath } from 'url';
+
 import chalk from 'chalk';
 import { command } from 'cleye';
 import { existsSync } from 'fs';
@@ -36,8 +36,7 @@ export const hookCommand = command(
     parameters: ['<set/unset>']
   },
   async (argv) => {
-    const __filename = fileURLToPath(import.meta.url);
-    const HOOK_URL = __filename;
+    const HOOK_URL = process.argv[1];
     const SYMLINK_URL = await getHooksPath();
     try {
       await assertGitRepo();
