@@ -1,6 +1,6 @@
 # Code Cleanup
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Clean Architecture
 - Unused `src/engine/*.ts` files MUST be deleted.

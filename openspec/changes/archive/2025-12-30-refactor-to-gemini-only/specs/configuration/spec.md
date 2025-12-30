@@ -1,6 +1,6 @@
 # Configuration
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Simplified Provider Config
 - `OCO_AI_PROVIDER` SHALL ONLY accept `gemini`.

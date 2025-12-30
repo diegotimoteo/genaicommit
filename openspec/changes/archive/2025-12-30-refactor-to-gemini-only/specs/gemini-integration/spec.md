@@ -1,6 +1,6 @@
 # Gemini Integration
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Use Latest Gemini SDK
 - The project MUST use `@google/generative-ai` version `^0.24.1`.
