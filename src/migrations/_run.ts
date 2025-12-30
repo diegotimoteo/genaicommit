@@ -34,20 +34,6 @@ export const runMigrations = async () => {
   if (!getIsGlobalConfigFileExist()) return;
 
   const config = getConfig();
-  if (config.OCO_AI_PROVIDER === OCO_AI_PROVIDER_ENUM.TEST) return;
-
-  // skip unhandled providers in migration00
-  if (
-    [
-      OCO_AI_PROVIDER_ENUM.DEEPSEEK,
-      OCO_AI_PROVIDER_ENUM.GROQ,
-      OCO_AI_PROVIDER_ENUM.MISTRAL,
-      OCO_AI_PROVIDER_ENUM.MLX,
-      OCO_AI_PROVIDER_ENUM.OPENROUTER
-    ].includes(config.OCO_AI_PROVIDER)
-  ) {
-    return;
-  }
 
   const completedMigrations = getCompletedMigrations();
 
@@ -62,8 +48,7 @@ export const runMigrations = async () => {
         saveCompletedMigration(migration.name);
       } catch (error) {
         outro(
-          `${chalk.red('Failed to apply migration')} ${
-            migration.name
+          `${chalk.red('Failed to apply migration')} ${migration.name
           }: ${error}`
         );
         process.exit(1);

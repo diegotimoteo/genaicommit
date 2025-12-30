@@ -1,28 +1,45 @@
-import { GeminiEngine } from '../../src/engine/gemini';
+const mockGenerateContent = jest.fn();
+const mockGoogleGenAIInstance = {
+  models: {
+    generateContent: mockGenerateContent
+  }
+};
+const MockGoogleGenAI = jest.fn(() => mockGoogleGenAIInstance);
 
-import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
+jest.mock('@google/genai', () => ({
+  GoogleGenAI: MockGoogleGenAI,
+  HarmCategory: {
+    HARM_CATEGORY_DANGEROUS_CONTENT: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+    HARM_CATEGORY_HARASSMENT: 'HARM_CATEGORY_HARASSMENT',
+    HARM_CATEGORY_HATE_SPEECH: 'HARM_CATEGORY_HATE_SPEECH',
+    HARM_CATEGORY_SEXUALLY_EXPLICIT: 'HARM_CATEGORY_SEXUALLY_EXPLICIT'
+  },
+  HarmBlockThreshold: {
+    BLOCK_LOW_AND_ABOVE: 'BLOCK_LOW_AND_ABOVE'
+  }
+}));
+
+import { GeminiEngine } from '../../src/engine/gemini';
 import {
   ConfigType,
   getConfig,
   OCO_AI_PROVIDER_ENUM
 } from '../../src/commands/config';
-import { OpenAI } from 'openai';
+import { Message } from '../../src/engine/Engine';
 
 describe('Gemini', () => {
   let gemini: GeminiEngine;
   let mockConfig: ConfigType;
-  let mockGoogleGenerativeAi: GoogleGenerativeAI;
-  let mockGenerativeModel: GenerativeModel;
-  let mockExit: jest.SpyInstance<never, [code?: number | undefined], any>;
-
-  const noop: (...args: any[]) => any = (...args: any[]) => {};
+  let mockExit: jest.SpyInstance;
 
   const mockGemini = () => {
     mockConfig = getConfig() as ConfigType;
 
     gemini = new GeminiEngine({
-      apiKey: mockConfig.OCO_API_KEY,
-      model: mockConfig.OCO_MODEL
+      apiKey: mockConfig.OCO_API_KEY || '',
+      model: mockConfig.OCO_MODEL,
+      maxTokensInput: mockConfig.OCO_TOKENS_MAX_INPUT,
+      maxTokensOutput: mockConfig.OCO_TOKENS_MAX_OUTPUT
     });
   };
 
@@ -32,7 +49,9 @@ describe('Gemini', () => {
     jest.resetModules();
     process.env = { ...oldEnv };
 
-    jest.mock('@google/generative-ai');
+    mockGenerateContent.mockReset();
+    MockGoogleGenAI.mockClear();
+
     jest.mock('../src/commands/config');
 
     jest.mock('@clack/prompts', () => ({
@@ -40,22 +59,18 @@ describe('Gemini', () => {
       outro: jest.fn()
     }));
 
-    mockExit = jest.spyOn(process, 'exit').mockImplementation();
+    mockExit = jest.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
 
     mockConfig = getConfig() as ConfigType;
 
     mockConfig.OCO_AI_PROVIDER = OCO_AI_PROVIDER_ENUM.GEMINI;
     mockConfig.OCO_API_KEY = 'mock-api-key';
     mockConfig.OCO_MODEL = 'gemini-1.5-flash';
-
-    mockGoogleGenerativeAi = new GoogleGenerativeAI(mockConfig.OCO_API_KEY);
-    mockGenerativeModel = mockGoogleGenerativeAi.getGenerativeModel({
-      model: mockConfig.OCO_MODEL
-    });
   });
 
   afterEach(() => {
     gemini = undefined as any;
+    jest.clearAllMocks();
   });
 
   afterAll(() => {
@@ -63,8 +78,8 @@ describe('Gemini', () => {
     process.env = oldEnv;
   });
 
-  it.skip('should exit process if OCO_GEMINI_API_KEY is not set and command is not config', () => {
-    process.env.OCO_GEMINI_API_KEY = undefined;
+  it.skip('should exit process if OCO_API_KEY is not set and command is not config', () => {
+    process.env.OCO_API_KEY = undefined;
     process.env.OCO_AI_PROVIDER = 'gemini';
 
     mockGemini();
@@ -73,24 +88,25 @@ describe('Gemini', () => {
   });
 
   it('should generate commit message', async () => {
-    const mockGenerateContent = jest
-      .fn()
-      .mockResolvedValue({ response: { text: () => 'generated content' } });
-    mockGenerativeModel.generateContent = mockGenerateContent;
+    mockGenerateContent.mockResolvedValue({
+      text: 'generated content'
+    });
 
     mockGemini();
 
-    const messages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> =
+    const messages: Array<Message> =
       [
         { role: 'system', content: 'system message' },
         { role: 'assistant', content: 'assistant message' }
       ];
 
-    jest
-      .spyOn(gemini, 'generateCommitMessage')
-      .mockImplementation(async () => 'generated content');
+    // Spy on the method of the instance we created
+    // But since generateCommitMessage calls client.models.generateContent, we verify that.
+
+    // Using the real implementation of generateCommitMessage to verify it calls the mock client
     const result = await gemini.generateCommitMessage(messages);
 
     expect(result).toEqual('generated content');
+    expect(mockGenerateContent).toHaveBeenCalled();
   });
 });

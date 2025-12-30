@@ -1,6 +1,4 @@
-import { OpenAI } from 'openai';
-
-import { AiEngine } from './Engine';
+import { AiEngine, Message } from './Engine';
 
 export const TEST_MOCK_TYPES = [
   'commit-message',
@@ -26,7 +24,7 @@ export class TestAi implements TestAiEngine {
   }
 
   async generateCommitMessage(
-    _messages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>
+    _messages: Array<Message>
   ): Promise<string | undefined> {
     switch (this.mockType) {
       case 'commit-message':

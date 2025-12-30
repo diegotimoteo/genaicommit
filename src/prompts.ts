@@ -1,5 +1,4 @@
 import { note } from '@clack/prompts';
-import { OpenAI } from 'openai';
 import { getConfig } from './commands/config';
 import { i18n, I18nLocals } from './i18n';
 import { configureCommitlintIntegration } from './modules/commitlint/config';
@@ -7,6 +6,7 @@ import { commitlintPrompts } from './modules/commitlint/prompts';
 import { ConsistencyPrompt } from './modules/commitlint/types';
 import * as utils from './modules/commitlint/utils';
 import { removeConventionalCommitWord } from './utils/removeConventionalCommitWord';
+import { Message } from './engine/Engine';
 
 const config = getConfig();
 const translation = i18n[(config.OCO_LANGUAGE as I18nLocals) || 'en'];
@@ -134,7 +134,7 @@ const INIT_MAIN_PROMPT = (
   language: string,
   fullGitMojiSpec: boolean,
   context: string
-): OpenAI.Chat.Completions.ChatCompletionMessageParam => ({
+): Message => ({
   role: 'system',
   content: (() => {
     const commitConvention = fullGitMojiSpec
@@ -154,10 +154,10 @@ const INIT_MAIN_PROMPT = (
   })()
 });
 
-export const INIT_DIFF_PROMPT: OpenAI.Chat.Completions.ChatCompletionMessageParam =
-  {
-    role: 'user',
-    content: `diff --git a/src/server.ts b/src/server.ts
+export const INIT_DIFF_PROMPT: Message =
+{
+  role: 'user',
+  content: `diff --git a/src/server.ts b/src/server.ts
     index ad4db42..f3b18a9 100644
     --- a/src/server.ts
     +++ b/src/server.ts
@@ -181,7 +181,7 @@ export const INIT_DIFF_PROMPT: OpenAI.Chat.Completions.ChatCompletionMessagePara
                 +app.listen(process.env.PORT || PORT, () => {
                     +  console.log(\`Server listening on port \${PORT}\`);
                 });`
-  };
+};
 
 const COMMIT_TYPES = {
   fix: '🐛',
@@ -221,7 +221,7 @@ const getConsistencyContent = (translation: ConsistencyPrompt) => {
 
 const INIT_CONSISTENCY_PROMPT = (
   translation: ConsistencyPrompt
-): OpenAI.Chat.Completions.ChatCompletionMessageParam => ({
+): Message => ({
   role: 'assistant',
   content: getConsistencyContent(translation)
 });
@@ -229,7 +229,7 @@ const INIT_CONSISTENCY_PROMPT = (
 export const getMainCommitPrompt = async (
   fullGitMojiSpec: boolean,
   context: string
-): Promise<Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>> => {
+): Promise<Array<Message>> => {
   switch (config.OCO_PROMPT_MODULE) {
     case '@commitlint':
       if (!(await utils.commitlintLLMConfigExists())) {
@@ -250,7 +250,7 @@ export const getMainCommitPrompt = async (
         INIT_DIFF_PROMPT,
         INIT_CONSISTENCY_PROMPT(
           commitLintConfig.consistency[
-            translation.localLanguage
+          translation.localLanguage
           ] as ConsistencyPrompt
         )
       ];

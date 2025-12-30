@@ -2,7 +2,7 @@
 
 import { cli } from 'cleye';
 
-import packageJSON from '../package.json';
+import packageJson from '../package.json' with { type: 'json' };
 import { commit } from './commands/commit';
 import { commitlintConfigCommand } from './commands/commitlint';
 import { configCommand } from './commands/config';
@@ -15,7 +15,7 @@ const extraArgs = process.argv.slice(2);
 
 cli(
   {
-    version: packageJSON.version,
+    version: packageJson.version,
     name: 'opencommit',
     commands: [configCommand, hookCommand, commitlintConfigCommand],
     flags: {
@@ -38,7 +38,7 @@ cli(
       }
     },
     ignoreArgv: (type) => type === 'unknown-flag' || type === 'argument',
-    help: { description: packageJSON.description }
+    help: { description: packageJson.description }
   },
   async ({ flags }) => {
     await runMigrations();

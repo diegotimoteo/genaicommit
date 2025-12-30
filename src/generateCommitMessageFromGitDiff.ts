@@ -1,5 +1,5 @@
-import { OpenAI } from 'openai';
 import { DEFAULT_TOKEN_LIMITS, getConfig } from './commands/config';
+import { Message } from './engine/Engine';
 import { getMainCommitPrompt } from './prompts';
 import { getEngine } from './utils/engine';
 import { mergeDiffs } from './utils/mergeDiffs';
@@ -12,8 +12,8 @@ const MAX_TOKENS_OUTPUT = config.OCO_TOKENS_MAX_OUTPUT;
 const generateCommitMessageChatCompletionPrompt = async (
   diff: string,
   fullGitMojiSpec: boolean,
-  context: string
-): Promise<Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>> => {
+  context: string = ''
+): Promise<Array<Message>> => {
   const INIT_MESSAGES_PROMPT = await getMainCommitPrompt(
     fullGitMojiSpec,
     context

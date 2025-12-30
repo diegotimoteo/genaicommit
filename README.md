@@ -28,7 +28,7 @@ You can use OpenCommit by simply running it via the CLI like this `oco`. 2 secon
    npm install -g opencommit
    ```
 
-2. Get your API key from [OpenAI](https://platform.openai.com/account/api-keys) or other supported LLM providers (we support them all). Make sure that you add your OpenAI payment details to your account, so the API works.
+2. Get your API key from [Google AI Studio](https://aistudio.google.com/).
 
 3. Set the key to OpenCommit config:
 
@@ -49,46 +49,7 @@ oco
 
 Running `git add` is optional, `oco` will do it for you.
 
-### Running locally with Ollama
 
-You can also run it with local model through ollama:
-
-- install and start ollama
-- run `ollama run mistral` (do this only once, to pull model)
-- run (in your project directory):
-
-```sh
-git add <files...>
-oco config set OCO_AI_PROVIDER='ollama' OCO_MODEL='llama3:8b'
-```
-
-Default model is `mistral`.
-
-If you have ollama that is set up in docker/ on another machine with GPUs (not locally), you can change the default endpoint url.
-
-You can do so by setting the `OCO_API_URL` environment variable as follows:
-
-```sh
-oco config set OCO_API_URL='http://192.168.1.10:11434/api/chat'
-```
-
-where 192.168.1.10 is example of endpoint URL, where you have ollama set up.
-
-#### Troubleshooting Ollama IPv6/IPv4 Connection Fix
-
-If you encounter issues with Ollama, such as the error
-
-```sh
-✖ local model issues. details: connect ECONNREFUSED ::1:11434
-```
-
-It's likely because Ollama is not listening on IPv6 by default. To fix this, you can set the OLLAMA_HOST environment variable to 0.0.0.0 before starting Ollama:
-
-```bash
-export OLLAMA_HOST=0.0.0.0
-```
-
-This will make Ollama listen on all interfaces, including IPv6 and IPv4, resolving the connection issue. You can add this line to your shell configuration file (like `.bashrc` or `.zshrc`) to make it persistent across sessions.
 
 ### Flags
 
@@ -122,22 +83,20 @@ Create a `.env` file and add OpenCommit config variables there like this:
 
 ```env
 ...
-OCO_AI_PROVIDER=<openai (default), anthropic, azure, ollama, gemini, flowise, deepseek, aimlapi>
-OCO_API_KEY=<your OpenAI API token> // or other LLM provider API token
-OCO_API_URL=<may be used to set proxy path to OpenAI api>
-OCO_API_CUSTOM_HEADERS=<JSON string of custom HTTP headers to include in API requests>
+OCO_AI_PROVIDER=gemini
+OCO_API_KEY=<your Gemini API token>
 OCO_TOKENS_MAX_INPUT=<max model token limit (default: 4096)>
 OCO_TOKENS_MAX_OUTPUT=<max response tokens (default: 500)>
 OCO_DESCRIPTION=<postface a message with ~3 sentences description of the changes>
 OCO_EMOJI=<boolean, add GitMoji>
-OCO_MODEL=<either 'gpt-4o-mini' (default), 'gpt-4o', 'gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-3.5-turbo-0125', 'gpt-4-1106-preview', 'gpt-4-turbo-preview' or 'gpt-4-0125-preview' or any Anthropic or Ollama model or any string basically, but it should be a valid model name>
+OCO_MODEL=<default: 'gemini-1.5-flash', or 'gemini-1.5-pro', 'gemini-2.0-flash-001'...>
 OCO_LANGUAGE=<locale, scroll to the bottom to see options>
 OCO_MESSAGE_TEMPLATE_PLACEHOLDER=<message template placeholder, default: '$msg'>
 OCO_PROMPT_MODULE=<either conventional-commit or @commitlint, default: conventional-commit>
 OCO_ONE_LINE_COMMIT=<one line commit message, default: false>
 ```
 
-Global configs are same as local configs, but they are stored in the global `~/.opencommit` config file and set with `oco config set` command, e.g. `oco config set OCO_MODEL=gpt-4o`.
+Global configs are same as local configs, but they are stored in the global `~/.opencommit` config file and set with `oco config set` command, e.g. `oco config set OCO_MODEL=gemini-1.5-flash`.
 
 ### Global config for all repos
 
@@ -146,7 +105,7 @@ Local config still has more priority than Global config, but you may set `OCO_MO
 Simply set any of the variables above like this:
 
 ```sh
-oco config set OCO_MODEL=gpt-4o-mini
+oco config set OCO_MODEL=gemini-1.5-flash
 ```
 
 To see all available configuration parameters and their accepted values:
@@ -185,34 +144,14 @@ To make this perform accurate we must store 'what files do' in some kind of an i
 oco config set OCO_WHY=true
 ```
 
-### Switch to GPT-4 or other models
+### Switch to other Gemini models
 
-By default, OpenCommit uses `gpt-4o-mini` model.
+By default, OpenCommit uses `gemini-1.5-flash` model.
 
-You may switch to gpt-4o which performs better, but costs more 🤠
-
-```sh
-oco config set OCO_MODEL=gpt-4o
-```
-
-or for as a cheaper option:
+You may switch to `gemini-1.5-pro` which supports larger context and better reasoning, or newer models like `gemini-2.0-flash-001`.
 
 ```sh
-oco config set OCO_MODEL=gpt-3.5-turbo
-```
-
-### Switch to other LLM providers with a custom URL
-
-By default OpenCommit uses [OpenAI](https://openai.com).
-
-You could switch to [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/) or Flowise or Ollama.
-
-```sh
-oco config set OCO_AI_PROVIDER=azure OCO_API_KEY=<your_azure_api_key> OCO_API_URL=<your_azure_endpoint>
-
-oco config set OCO_AI_PROVIDER=flowise OCO_API_KEY=<your_flowise_api_key> OCO_API_URL=<your_flowise_endpoint>
-
-oco config set OCO_AI_PROVIDER=ollama OCO_API_KEY=<your_ollama_api_key> OCO_API_URL=<your_ollama_endpoint>
+oco config set OCO_MODEL=gemini-1.5-pro
 ```
 
 ### Locale configuration
@@ -415,18 +354,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         env:
-          # set openAI api key in repo actions secrets,
-          # for openAI keys go to: https://platform.openai.com/account/api-keys
-          # for repo secret go to: <your_repo_url>/settings/secrets/actions
+          # set Gemini API key in repo actions secrets
           OCO_API_KEY: ${{ secrets.OCO_API_KEY }}
 
           # customization
           OCO_TOKENS_MAX_INPUT: 4096
           OCO_TOKENS_MAX_OUTPUT: 500
-          OCO_OPENAI_BASE_PATH: ''
           OCO_DESCRIPTION: false
           OCO_EMOJI: false
-          OCO_MODEL: gpt-4o
+          OCO_MODEL: gemini-1.5-flash
           OCO_LANGUAGE: en
           OCO_PROMPT_MODULE: conventional-commit
 ```
@@ -443,6 +379,5 @@ You pay for your requests to OpenAI API on your own.
 
 OpenCommit stores your key locally.
 
-OpenCommit by default uses 3.5-turbo model, it should not exceed $0.10 per casual working day.
+OpenCommit by default uses `gemini-1.5-flash`, which is very cost-effective and provides a generous free tier.
 
-You may switch to gpt-4, it's better, but more expensive.

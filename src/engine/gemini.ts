@@ -1,78 +1,66 @@
-import {
-  Content,
-  GoogleGenerativeAI,
-  HarmBlockThreshold,
-  HarmCategory,
-  Part
-} from '@google/generative-ai';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import axios from 'axios';
-import { OpenAI } from 'openai';
 import { removeContentTags } from '../utils/removeContentTags';
-import { AiEngine, AiEngineConfig } from './Engine';
+import { AiEngine, AiEngineConfig, Message } from './Engine';
 
-interface GeminiConfig extends AiEngineConfig {}
+interface GeminiConfig extends AiEngineConfig { }
 
 export class GeminiEngine implements AiEngine {
   config: GeminiConfig;
-  client: GoogleGenerativeAI;
+  client: GoogleGenAI;
 
-  constructor(config) {
-    this.client = new GoogleGenerativeAI(config.apiKey);
+  constructor(config: GeminiConfig) {
+    this.client = new GoogleGenAI({ apiKey: config.apiKey });
     this.config = config;
   }
 
   async generateCommitMessage(
-    messages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>
+    messages: Array<Message>
   ): Promise<string | undefined> {
     const systemInstruction = messages
       .filter((m) => m.role === 'system')
       .map((m) => m.content)
       .join('\n');
 
-    const gemini = this.client.getGenerativeModel({
-      model: this.config.model,
-      systemInstruction
-    });
-
     const contents = messages
       .filter((m) => m.role !== 'system')
-      .map(
-        (m) =>
-          ({
-            parts: [{ text: m.content } as Part],
-            role: m.role === 'user' ? m.role : 'model'
-          } as Content)
-      );
+      .map((m) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.content }]
+      }));
 
     try {
-      const result = await gemini.generateContent({
+      const result = await this.client.models.generateContent({
+        model: this.config.model,
         contents,
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
-          }
-        ],
-        generationConfig: {
+        config: {
+          systemInstruction: systemInstruction ? systemInstruction : undefined,
           maxOutputTokens: this.config.maxTokensOutput,
           temperature: 0,
-          topP: 0.1
+          topP: 0.1,
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+              threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+              threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+              threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+            }
+          ]
         }
       });
 
-      const content = result.response.text();
+      const content = result.text;
+      if (!content) return undefined;
       return removeContentTags(content, 'think');
     } catch (error) {
       const err = error as Error;

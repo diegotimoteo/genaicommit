@@ -52,7 +52,7 @@ describe('config', () => {
     it('should prioritize local .env over global .opencommit config', async () => {
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_KEY: 'global-key',
-        OCO_MODEL: 'gpt-3.5-turbo',
+        OCO_MODEL: 'gemini-1.5-flash',
         OCO_LANGUAGE: 'en'
       });
 
@@ -68,14 +68,14 @@ describe('config', () => {
 
       expect(config).not.toEqual(null);
       expect(config.OCO_API_KEY).toEqual('local-key');
-      expect(config.OCO_MODEL).toEqual('gpt-3.5-turbo');
+      expect(config.OCO_MODEL).toEqual('gemini-1.5-flash');
       expect(config.OCO_LANGUAGE).toEqual('fr');
     });
 
     it('should fallback to global config when local config is not set', async () => {
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_KEY: 'global-key',
-        OCO_MODEL: 'gpt-4',
+        OCO_MODEL: 'gemini-1.5-pro',
         OCO_LANGUAGE: 'de',
         OCO_DESCRIPTION: 'true'
       });
@@ -92,7 +92,7 @@ describe('config', () => {
       expect(config).not.toEqual(null);
       expect(config.OCO_API_KEY).toEqual('global-key');
       expect(config.OCO_API_URL).toEqual('local-api-url');
-      expect(config.OCO_MODEL).toEqual('gpt-4');
+      expect(config.OCO_MODEL).toEqual('gemini-1.5-pro');
       expect(config.OCO_LANGUAGE).toEqual('de');
       expect(config.OCO_DESCRIPTION).toEqual(true);
     });
@@ -122,7 +122,7 @@ describe('config', () => {
       expect(config.OCO_ONE_LINE_COMMIT).toEqual(false);
       expect(config.OCO_OMIT_SCOPE).toEqual(true);
     });
-    
+
     it('should handle custom HTTP headers correctly', async () => {
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_CUSTOM_HEADERS: '{"X-Global-Header": "global-value"}'
@@ -138,8 +138,8 @@ describe('config', () => {
       });
 
       expect(config).not.toEqual(null);
-      expect(config.OCO_API_CUSTOM_HEADERS).toEqual({"Authorization": "Bearer token123", "X-Custom-Header": "test-value"});
-      
+      expect(config.OCO_API_CUSTOM_HEADERS).toEqual({ "Authorization": "Bearer token123", "X-Custom-Header": "test-value" });
+
       // No need to parse JSON again since it's already an object
       const parsedHeaders = config.OCO_API_CUSTOM_HEADERS;
       expect(parsedHeaders).toHaveProperty('Authorization', 'Bearer token123');
@@ -150,7 +150,7 @@ describe('config', () => {
     it('should handle empty local config correctly', async () => {
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_KEY: 'global-key',
-        OCO_MODEL: 'gpt-4',
+        OCO_MODEL: 'gemini-1.5-pro',
         OCO_LANGUAGE: 'es'
       });
 
@@ -163,14 +163,14 @@ describe('config', () => {
 
       expect(config).not.toEqual(null);
       expect(config.OCO_API_KEY).toEqual('global-key');
-      expect(config.OCO_MODEL).toEqual('gpt-4');
+      expect(config.OCO_MODEL).toEqual('gemini-1.5-pro');
       expect(config.OCO_LANGUAGE).toEqual('es');
     });
 
     it('should override global config with null values in local .env', async () => {
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_KEY: 'global-key',
-        OCO_MODEL: 'gpt-4',
+        OCO_MODEL: 'gemini-1.5-pro',
         OCO_LANGUAGE: 'es'
       });
 
@@ -229,7 +229,7 @@ describe('config', () => {
       await setConfig(
         [
           [CONFIG_KEYS.OCO_API_KEY, 'new-key'],
-          [CONFIG_KEYS.OCO_MODEL, 'gpt-4']
+          [CONFIG_KEYS.OCO_MODEL, 'gemini-1.5-pro']
         ],
         globalConfigFile.filePath
       );
@@ -238,7 +238,7 @@ describe('config', () => {
         globalPath: globalConfigFile.filePath
       });
       expect(config.OCO_API_KEY).toEqual('new-key');
-      expect(config.OCO_MODEL).toEqual('gpt-4');
+      expect(config.OCO_MODEL).toEqual('gemini-1.5-pro');
     });
 
     it('should update existing config values', async () => {
@@ -318,12 +318,12 @@ describe('config', () => {
       expect(fileContent1).toContain('OCO_API_KEY=persisted-key');
 
       await setConfig(
-        [[CONFIG_KEYS.OCO_MODEL, 'gpt-4']],
+        [[CONFIG_KEYS.OCO_MODEL, 'gemini-1.5-pro']],
         globalConfigFile.filePath
       );
 
       const fileContent2 = readFileSync(globalConfigFile.filePath, 'utf8');
-      expect(fileContent2).toContain('OCO_MODEL=gpt-4');
+      expect(fileContent2).toContain('OCO_MODEL=gemini-1.5-pro');
     });
   });
 });

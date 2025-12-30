@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { OpenAI } from 'openai';
 
 import { outro } from '@clack/prompts';
 import {
@@ -12,6 +11,7 @@ import {
 import { getConfig } from '../../commands/config';
 import { i18n, I18nLocals } from '../../i18n';
 import { IDENTITY, INIT_DIFF_PROMPT } from '../../prompts';
+import { Message } from '../../engine/Engine';
 
 const config = getConfig();
 const translation = i18n[(config.OCO_LANGUAGE as I18nLocals) || 'en'];
@@ -56,11 +56,10 @@ const llmReadableRules: {
   blankline: (key, applicable) =>
     `There should ${applicable} be a blank line at the beginning of the ${key}.`,
   caseRule: (key, applicable, value: string | Array<string>) =>
-    `The ${key} should ${applicable} be in ${
-      Array.isArray(value)
-        ? `one of the following case:
+    `The ${key} should ${applicable} be in ${Array.isArray(value)
+      ? `one of the following case:
   - ${value.join('\n  - ')}.`
-        : `${value} case.`
+      : `${value} case.`
     }`,
   emptyRule: (key, applicable) => `The ${key} should ${applicable} be empty.`,
   enumRule: (key, applicable, value: string | Array<string>) =>
@@ -68,18 +67,17 @@ const llmReadableRules: {
   - ${Array.isArray(value) ? value.join('\n  - ') : value}.`,
   enumTypeRule: (key, applicable, value: string | Array<string>, prompt) =>
     `The ${key} should ${applicable} be one of the following values:
-  - ${
-    Array.isArray(value)
+  - ${Array.isArray(value)
       ? value
-          .map((v) => {
-            const description = getTypeRuleExtraDescription(v, prompt);
-            if (description) {
-              return `${v} (${description})`;
-            } else return v;
-          })
-          .join('\n  - ')
+        .map((v) => {
+          const description = getTypeRuleExtraDescription(v, prompt);
+          if (description) {
+            return `${v} (${description})`;
+          } else return v;
+        })
+        .join('\n  - ')
       : value
-  }.`,
+    }.`,
   fullStopRule: (key, applicable, value: string) =>
     `The ${key} should ${applicable} end with '${value}'.`,
   maxLengthRule: (key, applicable, value: string) =>
@@ -215,21 +213,20 @@ const STRUCTURE_OF_COMMIT = config.OCO_OMIT_SCOPE
 // Prompt to generate LLM-readable rules based on @commitlint rules.
 const GEN_COMMITLINT_CONSISTENCY_PROMPT = (
   prompts: string[]
-): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => [
-  {
-    role: 'system',
-    content: `${IDENTITY} Your mission is to create clean and comprehensive commit messages for two different changes in a single codebase and output them in the provided JSON format: one for a bug fix and another for a new feature.
+): Message[] => [
+    {
+      role: 'system',
+      content: `${IDENTITY} Your mission is to create clean and comprehensive commit messages for two different changes in a single codebase and output them in the provided JSON format: one for a bug fix and another for a new feature.
 
 Here are the specific requirements and conventions that should be strictly followed:
 
 Commit Message Conventions:
 - The commit message consists of three parts: Header, Body, and Footer.
 - Header:
-  - Format: ${
-    config.OCO_OMIT_SCOPE
-      ? '`<type>: <subject>`'
-      : '`<type>(<scope>): <subject>`'
-  }
+  - Format: ${config.OCO_OMIT_SCOPE
+          ? '`<type>: <subject>`'
+          : '`<type>(<scope>): <subject>`'
+        }
 - ${prompts.join('\n- ')}
 
 JSON Output Format:
@@ -252,9 +249,9 @@ Additional Details:
 - Allowing the server to listen on a port specified through the environment variable is considered a new feature.
 
 Example Git Diff is to follow:`
-  },
-  INIT_DIFF_PROMPT
-];
+    },
+    INIT_DIFF_PROMPT
+  ];
 
 /**
  * Prompt to have LLM generate a message using @commitlint rules.
@@ -266,32 +263,27 @@ Example Git Diff is to follow:`
 const INIT_MAIN_PROMPT = (
   language: string,
   prompts: string[]
-): OpenAI.Chat.Completions.ChatCompletionMessageParam => ({
+): Message => ({
   role: 'system',
-  content: `${IDENTITY} Your mission is to create clean and comprehensive commit messages in the given @commitlint convention and explain WHAT were the changes ${
-    config.OCO_WHY ? 'and WHY the changes were done' : ''
-  }. I'll send you an output of 'git diff --staged' command, and you convert it into a commit message.
-${
-  config.OCO_EMOJI
-    ? 'Use GitMoji convention to preface the commit.'
-    : 'Do not preface the commit with anything.'
-}
-${
-  config.OCO_DESCRIPTION
-    ? 'Add a short description of WHY the changes are done after the commit message. Don\'t start it with "This commit", just describe the changes.'
-    : "Don't add any descriptions to the commit, only commit message."
-}
+  content: `${IDENTITY} Your mission is to create clean and comprehensive commit messages in the given @commitlint convention and explain WHAT were the changes ${config.OCO_WHY ? 'and WHY the changes were done' : ''
+    }. I'll send you an output of 'git diff --staged' command, and you convert it into a commit message.
+${config.OCO_EMOJI
+      ? 'Use GitMoji convention to preface the commit.'
+      : 'Do not preface the commit with anything.'
+    }
+${config.OCO_DESCRIPTION
+      ? 'Add a short description of WHY the changes are done after the commit message. Don\'t start it with "This commit", just describe the changes.'
+      : "Don't add any descriptions to the commit, only commit message."
+    }
 Use the present tense. Use ${language} to answer.
-${
-  config.OCO_ONE_LINE_COMMIT
-    ? 'Craft a concise commit message that encapsulates all changes made, with an emphasis on the primary updates. If the modifications share a common theme or scope, mention it succinctly; otherwise, leave the scope out to maintain focus. The goal is to provide a clear and unified overview of the changes in a one single message, without diverging into a list of commit per file change.'
-    : ''
-}
-${
-  config.OCO_OMIT_SCOPE
-    ? 'Do not include a scope in the commit message format. Use the format: <type>: <subject>'
-    : ''
-}
+${config.OCO_ONE_LINE_COMMIT
+      ? 'Craft a concise commit message that encapsulates all changes made, with an emphasis on the primary updates. If the modifications share a common theme or scope, mention it succinctly; otherwise, leave the scope out to maintain focus. The goal is to provide a clear and unified overview of the changes in a one single message, without diverging into a list of commit per file change.'
+      : ''
+    }
+${config.OCO_OMIT_SCOPE
+      ? 'Do not include a scope in the commit message format. Use the format: <type>: <subject>'
+      : ''
+    }
 You will strictly follow the following conventions to generate the content of the commit message:
 - ${prompts.join('\n- ')}
 
