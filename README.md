@@ -89,14 +89,14 @@ OCO_TOKENS_MAX_INPUT=<max model token limit (default: 4096)>
 OCO_TOKENS_MAX_OUTPUT=<max response tokens (default: 500)>
 OCO_DESCRIPTION=<postface a message with ~3 sentences description of the changes>
 OCO_EMOJI=<boolean, add GitMoji>
-OCO_MODEL=<default: 'gemini-1.5-flash', or 'gemini-1.5-pro', 'gemini-2.0-flash-001'...>
+OCO_MODEL=<default: 'gemini-2.5-flash', or 'gemini-1.5-pro', 'gemini-2.5-pro'...>
 OCO_LANGUAGE=<locale, scroll to the bottom to see options>
 OCO_MESSAGE_TEMPLATE_PLACEHOLDER=<message template placeholder, default: '$msg'>
 OCO_PROMPT_MODULE=<either conventional-commit or @commitlint, default: conventional-commit>
 OCO_ONE_LINE_COMMIT=<one line commit message, default: false>
 ```
 
-Global configs are same as local configs, but they are stored in the global `~/.opencommit` config file and set with `oco config set` command, e.g. `oco config set OCO_MODEL=gemini-1.5-flash`.
+Global configs are same as local configs, but they are stored in the global `~/.opencommit` config file and set with `oco config set` command, e.g. `oco config set OCO_MODEL=gemini-2.5-flash`.
 
 ### Global config for all repos
 
@@ -105,7 +105,7 @@ Local config still has more priority than Global config, but you may set `OCO_MO
 Simply set any of the variables above like this:
 
 ```sh
-oco config set OCO_MODEL=gemini-1.5-flash
+oco config set OCO_MODEL=gemini-2.5-flash
 ```
 
 To see all available configuration parameters and their accepted values:
@@ -146,7 +146,7 @@ oco config set OCO_WHY=true
 
 ### Switch to other Gemini models
 
-By default, OpenCommit uses `gemini-1.5-flash` model.
+By default, OpenCommit uses `gemini-2.5-flash` model.
 
 You may switch to `gemini-1.5-pro` which supports larger context and better reasoning, or newer models like `gemini-2.0-flash-001`.
 
@@ -362,7 +362,7 @@ jobs:
           OCO_TOKENS_MAX_OUTPUT: 500
           OCO_DESCRIPTION: false
           OCO_EMOJI: false
-          OCO_MODEL: gemini-1.5-flash
+          OCO_MODEL: gemini-2.5-flash
           OCO_LANGUAGE: en
           OCO_PROMPT_MODULE: conventional-commit
 ```
@@ -375,9 +375,7 @@ Interactive rebase (`rebase -i`) changes commits' SHA, so the commit history in 
 
 ## Payments
 
-You pay for your requests to OpenAI API on your own.
-
 OpenCommit stores your key locally.
 
-OpenCommit by default uses `gemini-1.5-flash`, which is very cost-effective and provides a generous free tier.
+OpenCommit by default uses `gemini-2.5-flash`, which is very cost-effective and provides a generous free tier.
 

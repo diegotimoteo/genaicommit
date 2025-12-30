@@ -7,7 +7,6 @@ import { parse as iniParse, stringify as iniStringify } from 'ini';
 import { homedir } from 'os';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 import { COMMANDS } from './ENUMS';
-import { TEST_MOCK_TYPES } from '../engine/testAi';
 import { getI18nLocal, i18n } from '../i18n';
 
 export enum CONFIG_KEYS {
@@ -23,7 +22,7 @@ export enum CONFIG_KEYS {
   OCO_PROMPT_MODULE = 'OCO_PROMPT_MODULE',
   OCO_AI_PROVIDER = 'OCO_AI_PROVIDER',
   OCO_ONE_LINE_COMMIT = 'OCO_ONE_LINE_COMMIT',
-  OCO_TEST_MOCK_TYPE = 'OCO_TEST_MOCK_TYPE',
+
   OCO_API_URL = 'OCO_API_URL',
   OCO_API_CUSTOM_HEADERS = 'OCO_API_CUSTOM_HEADERS',
   OCO_OMIT_SCOPE = 'OCO_OMIT_SCOPE',
@@ -222,7 +221,7 @@ export const configValidators = {
 
     validateConfig(
       CONFIG_KEYS.OCO_AI_PROVIDER,
-      ['gemini', 'test'].includes(value),
+      value === 'gemini',
       `${value} is not supported. Only 'gemini' is supported.`
     );
 
@@ -239,16 +238,7 @@ export const configValidators = {
     return value;
   },
 
-  [CONFIG_KEYS.OCO_TEST_MOCK_TYPE](value: any) {
-    validateConfig(
-      CONFIG_KEYS.OCO_TEST_MOCK_TYPE,
-      TEST_MOCK_TYPES.includes(value),
-      `${value} is not supported yet, use ${TEST_MOCK_TYPES.map(
-        (t) => `'${t}'`
-      ).join(', ')}`
-    );
-    return value;
-  },
+
 
   [CONFIG_KEYS.OCO_WHY](value: any) {
     validateConfig(
@@ -269,8 +259,7 @@ export const configValidators = {
 };
 
 export enum OCO_AI_PROVIDER_ENUM {
-  GEMINI = 'gemini',
-  TEST = 'test'
+  GEMINI = 'gemini'
 }
 
 export type ConfigType = {
@@ -290,7 +279,7 @@ export type ConfigType = {
   [CONFIG_KEYS.OCO_GITPUSH]: boolean;
   [CONFIG_KEYS.OCO_ONE_LINE_COMMIT]: boolean;
   [CONFIG_KEYS.OCO_OMIT_SCOPE]: boolean;
-  [CONFIG_KEYS.OCO_TEST_MOCK_TYPE]: string;
+
   [CONFIG_KEYS.OCO_HOOK_AUTO_UNCOMMENT]: boolean;
 };
 
@@ -336,7 +325,7 @@ export const DEFAULT_CONFIG = {
   OCO_PROMPT_MODULE: OCO_PROMPT_MODULE_ENUM.CONVENTIONAL_COMMIT,
   OCO_AI_PROVIDER: OCO_AI_PROVIDER_ENUM.GEMINI,
   OCO_ONE_LINE_COMMIT: false,
-  OCO_TEST_MOCK_TYPE: 'commit-message',
+
   OCO_WHY: false,
   OCO_OMIT_SCOPE: false,
   OCO_GITPUSH: true, // todo: deprecate
@@ -378,7 +367,7 @@ const getEnvConfig = (envPath: string) => {
       process.env.OCO_MESSAGE_TEMPLATE_PLACEHOLDER,
     OCO_PROMPT_MODULE: process.env.OCO_PROMPT_MODULE as OCO_PROMPT_MODULE_ENUM,
     OCO_ONE_LINE_COMMIT: parseConfigVarValue(process.env.OCO_ONE_LINE_COMMIT),
-    OCO_TEST_MOCK_TYPE: process.env.OCO_TEST_MOCK_TYPE,
+
     OCO_OMIT_SCOPE: parseConfigVarValue(process.env.OCO_OMIT_SCOPE),
 
     OCO_GITPUSH: parseConfigVarValue(process.env.OCO_GITPUSH) // todo: deprecate
@@ -469,9 +458,7 @@ export const setConfig = (
   keyValues: [key: string, value: string | boolean | number | null][],
   globalConfigPath: string = defaultConfigPath
 ) => {
-  const config = getConfig({
-    globalPath: globalConfigPath
-  });
+  const config = getGlobalConfig(globalConfigPath);
 
   const configToSet = {};
 
@@ -528,11 +515,7 @@ function getConfigKeyDetails(key) {
         description: 'The locale to use for commit messages',
         values: Object.keys(i18n)
       };
-    case CONFIG_KEYS.OCO_TEST_MOCK_TYPE:
-      return {
-        description: 'The type of test mock to use',
-        values: ['commit-message', 'prompt-module-commitlint-config']
-      };
+
     case CONFIG_KEYS.OCO_ONE_LINE_COMMIT:
       return {
         description: 'One line commit message',

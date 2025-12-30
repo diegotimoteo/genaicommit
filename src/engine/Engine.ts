@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface AiEngineConfig {
   apiKey: string;
@@ -9,7 +9,7 @@ export interface AiEngineConfig {
   customHeaders?: Record<string, string>;
 }
 
-export type Client = GoogleGenAI;
+export type Client = GoogleGenerativeAI;
 
 export interface Message {
   role: 'user' | 'system' | 'assistant';

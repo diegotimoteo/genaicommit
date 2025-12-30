@@ -19,7 +19,7 @@ const config: Config = {
     '<rootDir>/test/e2e/prompt-module/data/'
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(cli-testing-library|@clack|cleye|@google/genai|chalk|execa)/.*)'
+    'node_modules/(?!(cli-testing-library|@clack|cleye|@google/genai|@google/generative-ai|chalk|execa)/.*)'
   ],
   transform: {
     '^.+\\.(ts|tsx|js|jsx|mjs)$': [

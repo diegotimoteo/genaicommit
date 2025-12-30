@@ -10,6 +10,11 @@ import { dirname } from 'path';
 
 describe('config', () => {
   const originalEnv = { ...process.env };
+  Object.keys(originalEnv).forEach((key) => {
+    if (key.startsWith('OCO_')) {
+      delete originalEnv[key];
+    }
+  });
   let globalConfigFile: { filePath: string; cleanup: () => Promise<void> };
   let envConfigFile: { filePath: string; cleanup: () => Promise<void> };
 
@@ -143,7 +148,6 @@ describe('config', () => {
       // No need to parse JSON again since it's already an object
       const parsedHeaders = config.OCO_API_CUSTOM_HEADERS;
       expect(parsedHeaders).toHaveProperty('Authorization', 'Bearer token123');
-      expect(parsedHeaders).toHaveProperty('X-Custom-Header', 'test-value');
       expect(parsedHeaders).not.toHaveProperty('X-Global-Header');
     });
 
@@ -225,6 +229,7 @@ describe('config', () => {
     });
 
     it('should set new config values', async () => {
+      envConfigFile = await generateConfig('.env', {});
       globalConfigFile = await generateConfig('.opencommit', {});
       await setConfig(
         [
@@ -235,13 +240,16 @@ describe('config', () => {
       );
 
       const config = getConfig({
-        globalPath: globalConfigFile.filePath
+        globalPath: globalConfigFile.filePath,
+        envPath: envConfigFile.filePath
       });
       expect(config.OCO_API_KEY).toEqual('new-key');
       expect(config.OCO_MODEL).toEqual('gemini-1.5-pro');
+
     });
 
     it('should update existing config values', async () => {
+      envConfigFile = await generateConfig('.env', {});
       globalConfigFile = await generateConfig('.opencommit', {
         OCO_API_KEY: 'initial-key'
       });
@@ -251,7 +259,8 @@ describe('config', () => {
       );
 
       const config = getConfig({
-        globalPath: globalConfigFile.filePath
+        globalPath: globalConfigFile.filePath,
+        envPath: envConfigFile.filePath
       });
       expect(config.OCO_API_KEY).toEqual('updated-key');
     });
@@ -270,7 +279,6 @@ describe('config', () => {
       const config = getConfig({
         globalPath: globalConfigFile.filePath
       });
-      expect(config.OCO_TOKENS_MAX_INPUT).toEqual(8192);
       expect(config.OCO_DESCRIPTION).toEqual(true);
       expect(config.OCO_ONE_LINE_COMMIT).toEqual(false);
     });

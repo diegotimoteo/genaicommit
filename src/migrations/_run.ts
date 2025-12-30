@@ -6,8 +6,7 @@ import { outro } from '@clack/prompts';
 import chalk from 'chalk';
 import {
   getConfig,
-  getIsGlobalConfigFileExist,
-  OCO_AI_PROVIDER_ENUM
+  getIsGlobalConfigFileExist
 } from '../commands/config';
 
 const migrationsFile = pathJoin(homedir(), '.opencommit_migrations');
