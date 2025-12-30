@@ -1,7 +1,7 @@
 # provider-support Specification
 
 ## Purpose
-TBD - created by archiving change refactor-to-gemini-only. Update Purpose after archive.
+Formalizes the deprecation policy by requiring the complete removal of support for all non-Gemini AI providers in the CLI and codebase.
 ## Requirements
 ### Requirement: Multiple Provider Support
 - Support for OpenAI, Anthropic, Azure, Ollama, Groq, Mistral, MLX, Deepseek, AIMLAPI, OpenRouter, Flowise, TestAI MUST be REMOVED.

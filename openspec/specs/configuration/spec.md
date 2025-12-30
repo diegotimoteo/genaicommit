@@ -1,7 +1,7 @@
 # configuration Specification
 
 ## Purpose
-TBD - created by archiving change refactor-to-gemini-only. Update Purpose after archive.
+Specifies configuration constraints, strictly enforcing Gemini as the sole AI provider and simplifying default settings.
 ## Requirements
 ### Requirement: Simplified Provider Config
 - `OCO_AI_PROVIDER` SHALL ONLY accept `gemini`.

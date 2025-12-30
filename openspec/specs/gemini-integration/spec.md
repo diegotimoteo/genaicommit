@@ -1,7 +1,7 @@
 # gemini-integration Specification
 
 ## Purpose
-TBD - created by archiving change refactor-to-gemini-only. Update Purpose after archive.
+Defines the integration requirements for the Google Gemini AI provider, ensuring the project uses the latest SDK and supports modern models.
 ## Requirements
 ### Requirement: Use Latest Gemini SDK
 - The project MUST use `@google/generative-ai` version `^0.24.1`.

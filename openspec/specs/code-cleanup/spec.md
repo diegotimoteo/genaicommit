@@ -1,7 +1,7 @@
 # code-cleanup Specification
 
 ## Purpose
-TBD - created by archiving change refactor-to-gemini-only. Update Purpose after archive.
+Mandates the removal of obsolete code, unused dependencies, and legacy test files related to deprecated AI providers.
 ## Requirements
 ### Requirement: Clean Architecture
 - Unused `src/engine/*.ts` files MUST be deleted.
